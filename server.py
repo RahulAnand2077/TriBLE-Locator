@@ -2,8 +2,8 @@ import socket
 import threading
 
 # Define host and port
-HOST = '0.0.0.0'  # Listen on all available interfaces
-PORT = 5000
+HOST = 'http://127.0.0.1:5500'  # Listen on all available interfaces
+PORT = 12345
 
 # Function to handle client connections
 def handle_client(client_socket, addr):
@@ -21,7 +21,7 @@ def handle_client(client_socket, addr):
 def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOST, PORT))
-    server.listen(5)
+    server.listen(5551)
     print(f"Server listening on {HOST}:{PORT}")
 
     while True:
