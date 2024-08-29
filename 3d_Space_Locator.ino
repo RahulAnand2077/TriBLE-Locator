@@ -39,29 +39,9 @@ class MyCallbacks : public BLECharacteristicCallbacks {
       rssi = value.toInt();
       Serial.print("Parsed RSSI value: ");
       Serial.println(rssi);
-      Serial.print("Distnace : ");
+      Serial.print("Distance : ");
       Serial.println(calculateDistance(rssi));
       // Process the RSSI value as needed for your application
-    }
-    //  else {
-    //   Serial.println("Invalid RSSI value received.");
-    }
-    if (value == "GET_RSSI") {
-      int simulatedRSSI1 = -50;  // Simulated RSSI for the first ESP32
-      int simulatedRSSI2 = -55;  // Simulated RSSI for the second ESP32
-      
-      float distance1 = calculateDistance(simulatedRSSI1);
-      float distance2 = calculateDistance(simulatedRSSI2);
-      
-      Serial.print("Simulated RSSI 1: "); Serial.println(simulatedRSSI1);
-      Serial.print("Calculated Distance 1: "); Serial.println(distance1);
-      Serial.print("Simulated RSSI 2: "); Serial.println(simulatedRSSI2);
-      Serial.print("Calculated Distance 2: "); Serial.println(distance2);
-      
-      // Respond with simulated RSSI values
-      String response = "RSSI1:" + String(simulatedRSSI1) + " RSSI2:" + String(simulatedRSSI2);
-      pCharacteristic->setValue(response);
-      pCharacteristic->notify();
     }
   }
 };

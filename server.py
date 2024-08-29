@@ -1,33 +1,35 @@
 import socket
-import threading
 
-# Define host and port
-HOST = 'http://127.0.0.1:5500'  # Listen on all available interfaces
-PORT = 12345
+def start_server():
+    s = socket.socket()
+    print('Socket Created')
 
-# Function to handle client connections
-def handle_client(client_socket, addr):
-    print(f"Connection established with {addr}")
-    while True:
-        data = client_socket.recv(1024).decode('utf-8')
-        if not data:
-            print(f"Connection closed by {addr}")
-            break
-        print(f"Received from {addr}: {data}")
-        client_socket.send(f"Data received: {data}".encode('utf-8'))
-    client_socket.close()
+    s.bind(('localhost', 9999))
+    s.listen(2)
 
-# Main server function
-def main():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((HOST, PORT))
-    server.listen(5551)
-    print(f"Server listening on {HOST}:{PORT}")
+    print('Waiting for Connections')
 
     while True:
-        client_socket, addr = server.accept()
-        client_handler = threading.Thread(target=handle_client, args=(client_socket, addr))
-        client_handler.start()
+        try:
+            c, addr = s.accept()
+            print('Connected with', addr)
+
+            while True:
+                data = c.recv(1024).decode()
+                if not data:
+                    print("No data received. Client may have disconnected.")
+                    break 
+                
+                print('Received from client:', data)
+
+                response = "Data received"
+                c.sendall(response.encode('utf-8'))
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+        finally:
+            c.close()
 
 if __name__ == "__main__":
-    main()
+    start_server()

@@ -1,27 +1,41 @@
 import socket
+import time
 
-# Define server address and port
-SERVER_HOST = 'your_server_ip'  # Replace with your server's IP address
-SERVER_PORT = 5000
 
 def main():
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((SERVER_HOST, SERVER_PORT))
-    print(f"Connected to server at {SERVER_HOST}:{SERVER_PORT}")
+    c = socket.socket()
+    
+    try:
+        c.connect(('localhost', 9999))
+        print("Connected to server")
+    except Exception as e:
+        print(f"Failed to connect to server: {e}")
+        return
 
     try:
         while True:
-            data = input("Enter data to send: ")
-            if data.lower() == 'exit':
-                break
-            client.send(data.encode('utf-8'))
-            response = client.recv(1024).decode('utf-8')
-            print(f"Received from server: {response}")
+            from terminal_scraper import get_rssi_data, get_distance_data
+            rssi_value = get_rssi_data()
+            distance_value = get_distance_data()
+
+            if rssi_value is not None and distance_value is not None:
+
+                rssi_message = f'RSSI Value : {rssi_value}'
+                distance_message = f'Distance Value : {distance_value}'
+                
+                c.sendall(rssi_message.encode('utf-8'))
+                c.sendall(distance_message.encode('utf-8'))
+                
+                response = c.recv(1024).decode('utf-8')
+                print(f"Server response: {response}")
+            
+            time.sleep(5)
+
     except KeyboardInterrupt:
-        pass
+        print("Client interrupted.")
+
     finally:
-        client.close()
-        print("Connection closed.")
+        c.close()
 
 if __name__ == "__main__":
     main()
