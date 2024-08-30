@@ -1,5 +1,47 @@
 import socket
 import time
+import serial
+import re
+import threading
+
+
+def read_serial(ser, rssi_pattern, data):
+    try:
+        while True:
+            if ser.in_waiting > 0:
+                line = ser.readline().decode('utf-8').rstrip()
+                print(f"Received: {line}")
+
+                rssi_match = rssi_pattern.search(line)
+
+                if rssi_match:
+                    data['rssi'] = int(rssi_match.group(1))
+            
+    except KeyboardInterrupt:
+        print("Stopping the data extraction.")
+    finally:
+        ser.close()
+
+
+def send_rssi_to_server(c, data):
+    try:
+        while True:
+            if data['rssi'] is not None:
+                rssi_message = f'RSSI Value: {data["rssi"]}\n'
+                
+                c.sendall(rssi_message.encode('utf-8'))
+                print(f"Sent to server: {rssi_message.strip()}")
+                
+                response = c.recv(1024).decode('utf-8')
+                print(f"Server response: {response}")
+            
+            time.sleep(5)  # Adjust the time interval as needed
+
+    except KeyboardInterrupt:
+        print("Client interrupted.")
+
+    finally:
+        c.close()
 
 
 def main():
@@ -11,31 +53,20 @@ def main():
     except Exception as e:
         print(f"Failed to connect to server: {e}")
         return
+    
+    ser = serial.Serial('COM5', 115200, timeout=1)
+    time.sleep(2)
 
-    try:
-        while True:
-            from terminal_scraper import get_rssi_data, get_distance_data
-            rssi_value = get_rssi_data()
-            distance_value = get_distance_data()
+    rssi_pattern = re.compile(r"Parsed RSSI value: (-?\d+)")
+    data = {'rssi': None}
 
-            if rssi_value is not None and distance_value is not None:
+    # Start a thread for reading serial data
+    serial_thread = threading.Thread(target=read_serial, args=(ser, rssi_pattern, data))
+    serial_thread.start()
 
-                rssi_message = f'RSSI Value : {rssi_value}'
-                distance_message = f'Distance Value : {distance_value}'
-                
-                c.sendall(rssi_message.encode('utf-8'))
-                c.sendall(distance_message.encode('utf-8'))
-                
-                response = c.recv(1024).decode('utf-8')
-                print(f"Server response: {response}")
-            
-            time.sleep(5)
+    # Send RSSI data to the server in the main thread
+    send_rssi_to_server(c, data)
 
-    except KeyboardInterrupt:
-        print("Client interrupted.")
-
-    finally:
-        c.close()
 
 if __name__ == "__main__":
     main()
