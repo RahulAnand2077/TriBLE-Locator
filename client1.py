@@ -57,7 +57,7 @@ def main():
         print(f"Failed to open serial port: {e}")
         return
 
-    rssi_pattern = re.compile(r"Parsed RSSI value: (-?\d+)")
+    rssi_pattern = re.compile(r"Parsed RSSI value 1: (-?\d+)")
     data = {'rssi': None}
 
     serial_thread = threading.Thread(target=read_serial, args=(ser, rssi_pattern, data))

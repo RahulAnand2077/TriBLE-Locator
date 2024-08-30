@@ -42,6 +42,34 @@ def handle_client_connection(c):
             response = f"Estimated Position: {estimated_position.tolist()}\n"
             c.sendall(response.encode('utf-8'))
 
+            import matplotlib.pyplot as plt
+            from mpl_toolkits.mplot3d import Axes3D
+            from mpl_toolkits.mplot3d.art3d import Line3DCollection
+
+            def plot_spheres(positions, distances):
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+
+                # Plot spheres
+                u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+                x = np.cos(u) * np.sin(v)
+                y = np.sin(u) * np.sin(v)
+                z = np.cos(v)
+                
+                for (pos, dist) in zip(positions, distances):
+                    ax.plot_surface(pos[0] + dist*x, pos[1] + dist*y, pos[2] + dist*z, color='b', alpha=0.1)
+
+                # Plot the estimated position
+                ax.scatter(*estimated_position, color='r', s=100, label='Estimated Position')
+
+                ax.set_xlabel('X')
+                ax.set_ylabel('Y')
+                ax.set_zlabel('Z')
+                plt.legend()
+                plt.show()
+
+            plot_spheres(positions, distances)
+
     except Exception as e:
         print(f"Error in handling client: {e}")
     finally:
