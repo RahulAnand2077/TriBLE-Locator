@@ -35,13 +35,14 @@ class MyCallbacks : public BLECharacteristicCallbacks {
 
     // Convert the received value to an integer (assuming it's a valid dBm value)
     int rssi;
-    if (value.toInt() != 0) {
+    if (value.toInt() != 0 || value.toInt()<0) {
       rssi = value.toInt();
       Serial.print("Parsed RSSI value: ");
       Serial.println(rssi);
-      Serial.print("Distance : ");
-      Serial.println(calculateDistance(rssi));
       // Process the RSSI value as needed for your application
+    }
+     else {
+      Serial.println("Invalid RSSI value received.");
     }
   }
 };
