@@ -23,8 +23,8 @@ def send_rssi_to_server(c, data):
     try:
         while True:
             if data['rssi'] is not None:
-                rssi_message = f'{data["rssi"]},{data["rssi"]},{data["rssi"]}\n'  # Assuming same RSSI for all ESP32s
-                print(f"Sending to server: {rssi_message.strip()}")
+                rssi_message = f'{data["rssi"]}\n'  # Assuming same RSSI for all ESP32s
+                print(f"Sending to server (1): {rssi_message.strip()}")
 
                 try:
                     c.sendall(rssi_message.encode('utf-8'))
@@ -45,7 +45,7 @@ def main():
     c = socket.socket()
     
     try:
-        c.connect(('localhost', 9999))
+        c.connect(('192.168.1.52', 8080))
         print("Connected to server")
     except socket.error as e:
         print(f"Failed to connect to server: {e}")
