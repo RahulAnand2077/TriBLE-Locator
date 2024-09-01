@@ -42,8 +42,28 @@ def plot_spheres(positions, distances, estimated_position):
     y = np.sin(u) * np.sin(v)
     z = np.cos(v)
 
+    clr = ['r', 'b', 'g']
+    i = 0
     for (pos, dist) in zip(positions, distances):
-        ax.plot_surface(pos[0] + dist * x, pos[1] + dist * y, pos[2] + dist * z, color='b', alpha=0.1)
+        ax.plot_surface(pos[0] + dist * x, pos[1] + dist * y, pos[2] + dist * z, color=clr[i], alpha=0.1)
+        i += 1
+    
+    centers = np.array(positions)
+    ax.scatter(centers[:, 0], centers[:, 1], centers[:, 2], color='g', s=100, label='Sphere Centers')
+
+    # Connect centers with lines
+    for i in range(len(centers)):
+        for j in range(i + 1, len(centers)):
+            ax.plot([centers[i, 0], centers[j, 0]],
+                    [centers[i, 1], centers[j, 1]],
+                    [centers[i, 2], centers[j, 2]],
+                    color='k', linestyle='--')
+
+    # Annotate centers with coordinates
+    for center in centers:
+        ax.text(center[0], center[1], center[2],
+                f'({center[0]:.2f}, {center[1]:.2f}, {center[2]:.2f})',
+                color='g', fontsize=10, bbox=dict(facecolor='white', alpha=0.7))
 
     # Plot the estimated position
     ax.scatter(*estimated_position, color='r', s=100, label='Estimated Position')

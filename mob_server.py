@@ -10,6 +10,9 @@ positions = np.array([
     [0, 2, 0]    # Position of the third ESP32
 ])
 
+# Dictionary to store RSSI values for each client (indexed by client_id)
+rssi_data = {}
+
 def calculate_distance(rssi):
     A = -69  # RSSI at 1 meter
     n = 2.0  # Path loss exponent
@@ -28,42 +31,39 @@ def trilateration(positions, distances):
     result = least_squares(equations, initial_guess)
     return result.x
 
-def handle_client_connection(c):
+def handle_client_connection(c, client_id):
     try:
         while True:
-            # Receive all data from the client
             data = c.recv(1024).decode('utf-8').strip()
             if not data:
                 break
+            print(f"Received data from client {client_id}: {data}")
 
-            # Split the received data by newlines and process each line
-            rssi_values = data.split('\n')
-            if len(rssi_values) < 3:
-                print("Received insufficient data.")
-                continue
+            # Assuming the client sends only one RSSI value
+            rssi = float(data)
+            distance = calculate_distance(rssi)
 
-            # Convert RSSI values to distances
-            distances = []
-            for rssi_value in rssi_values:
-                try:
-                    rssi = float(rssi_value)
-                    distance = calculate_distance(rssi)
-                    distances.append(distance)
-                except ValueError:
-                    print(f"Invalid RSSI value received: {rssi_value}")
-                    continue
+            # Store the distance in the global dictionary
+            rssi_data[client_id] = distance
 
-            # Check if we have received exactly 3 distances
-            if len(distances) == 3:
+            # Check if we have received data from all clients
+            if len(rssi_data) == 3:
+                distances = np.array([rssi_data[0], rssi_data[1], rssi_data[2]])
+
                 # Perform trilateration
                 estimated_position = trilateration(positions, distances)
                 print("Estimated Position:", estimated_position)
 
-                # Send back the estimated position to the client
+                # Send back the estimated position to all clients
                 response = f"Estimated Position: {estimated_position.tolist()}\n"
-                c.sendall(response.encode('utf-8'))
+                for cid in rssi_data:
+                    # Assuming we keep track of the connection objects for each client
+                    c.sendall(response.encode('utf-8'))
 
-                # Optionally plot the spheres
+                # Clear the rssi_data dictionary for the next round
+                rssi_data.clear()
+
+                # Plot the spheres
                 import matplotlib.pyplot as plt
                 from mpl_toolkits.mplot3d import Axes3D
 
@@ -79,7 +79,7 @@ def handle_client_connection(c):
 
                     for (pos, dist) in zip(positions, distances):
                         ax.plot_surface(pos[0] + dist * x, pos[1] + dist * y, pos[2] + dist * z, color='b', alpha=0.1)
-
+                                    
                     # Plot the estimated position
                     ax.scatter(*estimated_position, color='r', s=100, label='Estimated Position')
 
@@ -90,11 +90,9 @@ def handle_client_connection(c):
                     plt.show()
 
                 plot_spheres(positions, distances)
-            else:
-                print("Received incorrect number of distances.")
 
     except Exception as e:
-        print(f"Error in handling client: {e}")
+        print(f"Error in handling client {client_id}: {e}")
     finally:
         c.close()
 
@@ -104,11 +102,13 @@ def start_server():
     s.listen(5)
     print('Server listening on port 8080...')
 
+    client_id = 0
     while True:
         c, addr = s.accept()
         print(f"Connected with {addr}")
-        client_thread = threading.Thread(target=handle_client_connection, args=(c,))
+        client_thread = threading.Thread(target=handle_client_connection, args=(c, client_id))
         client_thread.start()
+        client_id += 1
 
 if __name__ == "__main__":
     start_server()
