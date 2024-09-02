@@ -1,4 +1,4 @@
-# 3d_Space_Locator
+# 3d_Space_Locator_using_esp32
 
 A hackathon project which can be used as an alternative to locate yourself in an open environment where gps is not available using 3 esp32's.
 1st project is using a 3rd party mobile app "nRF Connect" to send rssi data sequentially to each esp32 and get the location of mobile using trilateration and plot it using matplotlib.
